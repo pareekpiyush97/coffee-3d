@@ -22,9 +22,14 @@
     ["img/bt/11.jpg", "Kitchen", "Grilled Sandwich", "₹350"],
   ];
 
+  /* phones can't seek a video per scroll-frame without lag → on touch devices we
+     let the clip autoplay-loop as a smooth moving background instead of scrubbing */
+  const MOBILE = matchMedia("(hover: none) and (pointer: coarse)").matches || innerWidth < 760;
+
   document.addEventListener("DOMContentLoaded", function () {
     $("#yr") && ($("#yr").textContent = new Date().getFullYear());
     const nav = $("#nav"), burger = $("#burger"), menu = $("#mainmenu"), cue = $("#scrollcue");
+    if (MOBILE) document.body.classList.add("is-mobile");
 
     /* menu cards */
     const cards = $("#cards");
@@ -42,27 +47,39 @@
 
     /* ── scroll-scrubbed video ── */
     const v = $("#bgv");
-    let dur = 0, targetT = 0, curT = 0, primed = false;
-    const prime = () => {                    // some browsers only seek smoothly after a play()
-      if (primed || !v) return; primed = true;
+    let dur = 0, targetT = 0, curT = 0, primedDesktop = false;
+    const playLoop = () => { if (!v) return; const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+    const primeScrub = () => {               // desktop: a play→pause primes smooth seeking
+      if (primedDesktop || !v) return; primedDesktop = true;
       const p = v.play && v.play();
       if (p && p.then) p.then(() => v.pause()).catch(() => {});
       else { try { v.pause(); } catch (e) {} }
     };
     if (v) {
       v.addEventListener("loadedmetadata", () => { dur = v.duration || 10; });
-      /* load the whole clip into memory as a Blob → fully seekable on any host
-         (dev servers without HTTP Range can't seek a streamed <video>) */
-      const srcEl = v.querySelector("source");
-      const url = (srcEl && srcEl.src) || v.currentSrc || "media/scrub.mp4";
-      fetch(url).then((r) => r.blob()).then((b) => {
-        v.removeAttribute("src"); if (srcEl) srcEl.remove();
-        v.src = URL.createObjectURL(b); v.load();
-      }).catch(() => {});
-      if (v.readyState >= 1) dur = v.duration || 10;
-      ["pointerdown", "touchstart", "wheel", "keydown"].forEach((ev) =>
-        addEventListener(ev, prime, { once: true, passive: true }));
-      setTimeout(prime, 600);
+      if (MOBILE) {
+        /* MOBILE: just stream & loop the clip as a smooth moving background — no
+           per-frame seeking, so no lag. Progressive stream, no big upfront Blob. */
+        v.loop = true; v.setAttribute("loop", ""); v.setAttribute("autoplay", ""); v.setAttribute("playsinline", "");
+        v.addEventListener("loadeddata", playLoop, { once: true });
+        v.addEventListener("canplay", playLoop, { once: true });
+        playLoop();
+        ["pointerdown", "touchstart", "scroll"].forEach((ev) =>
+          addEventListener(ev, playLoop, { passive: true }));
+      } else {
+        /* DESKTOP: load the whole clip as a Blob → fully seekable on any host, so
+           scroll can scrub it frame-by-frame */
+        const srcEl = v.querySelector("source");
+        const url = (srcEl && srcEl.src) || v.currentSrc || "media/scrub.mp4";
+        fetch(url).then((r) => r.blob()).then((b) => {
+          v.removeAttribute("src"); if (srcEl) srcEl.remove();
+          v.src = URL.createObjectURL(b); v.load();
+        }).catch(() => {});
+        if (v.readyState >= 1) dur = v.duration || 10;
+        ["pointerdown", "wheel", "keydown"].forEach((ev) =>
+          addEventListener(ev, primeScrub, { once: true, passive: true }));
+        setTimeout(primeScrub, 600);
+      }
     }
 
     let lastY = 0;
@@ -76,15 +93,17 @@
       targetT = p * (dur || 10);
     };
 
-    /* smoothing loop → eases the video toward the scroll target */
-    function raf() {
-      if (v && dur) {
-        curT = lerp(curT, targetT, 0.14);
-        if (Math.abs(curT - targetT) > 0.002) { try { v.currentTime = curT; } catch (e) {} }
-      }
-      requestAnimationFrame(raf);
+    /* smoothing loop → eases the video toward the scroll target (desktop scrub only;
+       on mobile the video plays/loops on its own, so no per-frame seeking = no lag) */
+    if (!MOBILE) {
+      (function raf() {
+        if (v && dur) {
+          curT = lerp(curT, targetT, 0.14);
+          if (Math.abs(curT - targetT) > 0.002) { try { v.currentTime = curT; } catch (e) {} }
+        }
+        requestAnimationFrame(raf);
+      })();
     }
-    requestAnimationFrame(raf);
 
     /* smooth scroll */
     let lenis = null;

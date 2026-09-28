@@ -165,6 +165,26 @@ main{position:relative;z-index:10}
   .cards{grid-template-columns:1fr}
   .stats{grid-template-columns:1fr}
 }
+/* ── mobile: keep the video visible but make text readable, and crisp ── */
+@media (max-width:760px){
+  /* darken the top (nav) and bottom (text) zones, keep the middle clearer so the
+     coffee video stays visible behind everything */
+  .bg__tint{background:
+    linear-gradient(180deg, rgba(10,7,5,.74) 0%, rgba(10,7,5,.34) 24%, rgba(10,7,5,.44) 54%, rgba(8,6,4,.9) 100%)}
+  #bgv{image-rendering:auto}
+  .grain{opacity:.03}
+  .hero h1,.block h2,.visit h2,.menu-head h2{text-shadow:0 2px 20px rgba(0,0,0,.65),0 1px 4px rgba(0,0,0,.5)}
+  .hero__sub,.block p,.visit .lede{color:#f1e7d6;text-shadow:0 1px 14px rgba(0,0,0,.8),0 1px 3px rgba(0,0,0,.6)}
+  .hero__kicker .label,.eyebrow .label{text-shadow:0 1px 8px rgba(0,0,0,.7)}
+  /* give the editorial blocks a soft local scrim so short lines never wash out */
+  .block{background:radial-gradient(120% 120% at 30% 40%, rgba(10,7,5,.5), transparent 75%);
+    padding:22px 20px;margin:-22px -20px;border-radius:16px}
+  .block--right{background:radial-gradient(120% 120% at 70% 40%, rgba(10,7,5,.5), transparent 75%)}
+  .visit .wrap{background:radial-gradient(120% 90% at 50% 45%, rgba(10,7,5,.55), transparent 78%);
+    padding:26px 18px;border-radius:20px}
+  .hero{padding-bottom:clamp(56px,11vh,96px)}
+}
+
 @media (prefers-reduced-motion:reduce){
   .grain,.marquee__t,.scrollcue .bar::after{animation:none}
   .rev{opacity:1;transform:none}
