@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Blue Tokai Coffee Roasters · Origins, Janpath</title>
+<meta name="description" content="Blue Tokai Coffee Roasters, Origins café on Janpath, New Delhi — freshly roasted single-origin Indian coffee. 4.7★ on Google." />
+<meta name="theme-color" content="#0c0a08" />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="favicon.svg" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Blue Tokai · Origins, Janpath — concept in 3D" />
+<meta property="og:description" content="An independent scroll-scrubbed concept for Blue Tokai's Origins café, Janpath. Not affiliated." />
+<meta property="og:image" content="media/scrub-poster.jpg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/app.css?v=2" />
+</head>
+<body>
+
+<a class="skip" href="#origin">Skip to content</a>
+
+<!-- preloader -->
+<div id="preload">
+  <div class="pl__inner">
+    <div class="pl__row"><div class="pl__word">Blue Tokai<span class="dot">.</span></div><div class="pl__pct"><span id="plNum">0</span>%</div></div>
+    <div class="pl__bar"><div class="pl__fill" id="plFill"></div></div>
+    <div class="pl__meta"><span class="label">Coffee Roasters · Janpath</span><span class="label" id="plMsg">Warming up</span></div>
+  </div>
+</div>
+
+<!-- scroll-scrubbed video background (every frame a keyframe → frame-by-frame on scroll) -->
+<div class="bg" aria-hidden="true">
+  <video id="bgv" muted playsinline preload="auto" poster="media/scrub-poster.jpg">
+    <source src="media/scrub.mp4" type="video/mp4" />
+  </video>
+  <div class="bg__tint"></div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- nav -->
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Blue Tokai Coffee Roasters, home">Blue Tokai<span class="dot">.</span></a>
+  <div class="nav__right">
+    <a class="nav__link" href="#origin">Origin</a>
+    <a class="nav__link" href="#menu">Menu</a>
+    <a class="nav__link" href="#visit">Visit</a>
+    <a class="btn btn--amber" href="#visit">Order</a>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mainmenu" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<div class="menu" id="mainmenu" aria-hidden="true">
+  <a href="#top"><em>01</em>Home</a>
+  <a href="#origin"><em>02</em>Origin</a>
+  <a href="#brew"><em>03</em>The Brew</a>
+  <a href="#menu"><em>04</em>Menu</a>
+  <a href="#visit"><em>05</em>Visit</a>
+</div>
+
+<div class="scrollcue" id="scrollcue"><span class="label">Scroll</span><span class="bar"></span></div>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="sec hero" id="hero">
+    <div class="wrap">
+      <div class="hero__kicker"><b></b><span class="label label--amber">Coffee Roasters · Origins, Janpath · New Delhi</span></div>
+      <h1 class="rev in">Coffee,<br />from the <em>source.</em></h1>
+      <p class="hero__sub rev in">Single-origin Indian coffee, roasted fresh and brewed with care at our Origins café on Janpath.</p>
+      <div class="hero__cta rev in">
+        <a class="btn btn--amber btn--lg" href="#menu">Explore the menu</a>
+        <a class="btn btn--ghost btn--lg" href="#visit">Find the café</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORIGIN -->
+  <section class="sec" id="origin">
+    <div class="wrap"><div class="block block--right rev">
+      <div class="eyebrow"><span class="label label--amber">01 — Origin</span><b></b></div>
+      <h2>Grown on <em>Indian estates.</em></h2>
+      <p>Single-origin beans from India's finest coffee estates — traceable to the farm, seasonally sourced, and roasted fresh so every cup tastes of where it came from.</p>
+    </div></div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee__t">
+    <span>Single origin</span><span>Small batch</span><span>Roasted weekly</span><span>Syphon</span><span>Cold brew</span>
+    <span>Single origin</span><span>Small batch</span><span>Roasted weekly</span><span>Syphon</span><span>Cold brew</span>
+  </div></div>
+
+  <!-- BREW -->
+  <section class="sec" id="brew">
+    <div class="wrap"><div class="block rev">
+      <div class="eyebrow"><b></b><span class="label label--amber">02 — The Brew</span></div>
+      <h2>Espresso, filter, <em>syphon.</em></h2>
+      <p>A two-storey brew bar where the baristas take their time — pour-overs, cold brew and syphon coffee, ground to order and dialled in every morning.</p>
+    </div></div>
+  </section>
+
+  <!-- MENU -->
+  <section class="menu-sec" id="menu">
+    <div class="menu-head rev">
+      <div class="eyebrow"><span class="label label--amber">03 — The Menu</span></div>
+      <h2 class="fancy">From the bar</h2>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats" aria-label="At a glance">
+    <div class="stat"><b>4.7<span class="u">★</span></b><span>Google rating</span></div>
+    <div class="stat"><b><span class="num" data-count="216">0</span></b><span>Reviews</span></div>
+    <div class="stat"><b>₹200<span class="u">–600</span></b><span>Per person</span></div>
+    <div class="stat"><b>12<span class="u">am</span></b><span>Open till daily</span></div>
+  </section>
+
+  <!-- VISIT -->
+  <section class="sec visit" id="visit">
+    <div class="wrap"><div class="rev in">
+      <div class="eyebrow" style="justify-content:center"><span class="label label--amber">04 — Visit</span></div>
+      <h2>Come for a cup.</h2>
+      <p class="lede" style="margin:1em auto 0">&ldquo;The Janpath location features two-storey seating with a fantastic ambiance.&rdquo;</p>
+      <div class="rows">
+        <div><h4 class="label">Hours</h4><p>Open daily<br />till 12:00 am</p></div>
+        <div><h4 class="label">Find us</h4><p>Ground &amp; Mezzanine, No 48,<br />Janpath, New Delhi 110001</p></div>
+        <div><h4 class="label">Say hello</h4><p>098716 74003<br />stores.bluetokaicoffee.com</p></div>
+      </div>
+      <div class="hero__cta" style="justify-content:center">
+        <a class="btn btn--amber btn--lg" href="https://www.google.com/maps/place/Blue+Tokai+Coffee+Roasters+Origins+%7C+Janpath/@28.626972,77.219778,17z" target="_blank" rel="noopener">Get directions →</a>
+        <a class="btn btn--ghost btn--lg" href="https://stores.bluetokaicoffee.com" target="_blank" rel="noopener">Order online</a>
+      </div>
+    </div></div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer__top">
+      <div class="footer__big fancy">Blue Tokai<span class="dot">.</span></div>
+      <p class="lede" style="max-width:32ch;font-size:1rem">Coffee Roasters · Origins café, Janpath. Freshly roasted single-origin Indian coffee.</p>
+    </div>
+    <div class="footer__bot">
+      <span>Independent concept &amp; design study — not affiliated with, or endorsed by, Blue Tokai Coffee Roasters. Imagery &amp; details via Google, shown for demonstration only.</span>
+    </div>
+    <div class="footer__bot">
+      <span>© <span id="yr">2026</span> Concept build</span>
+      <span>Scroll-scrubbed video · data from Google Maps</span>
+      <span><a href="#top">Back to top ↑</a></span>
+    </div>
+  </footer>
+</main>
+
+<script src="js/lib/gsap.min.js"></script>
+<script src="js/lib/ScrollTrigger.min.js"></script>
+<script src="js/lib/lenis.min.js"></script>
+<script src="js/app.js?v=4"></script>
+</body>
+</html>
