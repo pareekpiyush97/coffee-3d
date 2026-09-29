@@ -1,8 +1,8 @@
 /* ============================================================================
-   Blue Tokai · Origins — scroll-scrubbed video background
-   The clip is re-encoded all-intra (every frame a keyframe), so scrolling seeks
-   the video frame-by-frame at full quality. Whole-page scroll maps to video
-   time; a smoothing loop eases currentTime for buttery scrubbing.
+   Blue Tokai · Origins — scroll-driven image-sequence background
+   The hero clip is exported as a sequence of clean frames (no baked-in UI) and
+   drawn to a canvas. Scroll maps to a frame index, so it scrubs frame-by-frame,
+   pin-sharp, with zero video-seek lag — identical on desktop and mobile.
    Plus the page chrome: Lenis smooth scroll, reveals, counters, menu.
    ========================================================================== */
 (function () {
@@ -13,6 +13,9 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const STILL = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  const N = 93;                                  // number of frames in img/seq
+  const PATH = (i) => `img/seq/f_${String(i + 1).padStart(3, "0")}.jpg`;
+
   const MENU = [
     ["img/bt/03.jpg", "Signature", "Cappuccino", "₹230"],
     ["img/bt/08.jpg", "Brew", "Filter Coffee", "₹210"],
@@ -22,14 +25,9 @@
     ["img/bt/11.jpg", "Kitchen", "Grilled Sandwich", "₹350"],
   ];
 
-  /* phones can't seek a video per scroll-frame without lag → on touch devices we
-     let the clip autoplay-loop as a smooth moving background instead of scrubbing */
-  const MOBILE = matchMedia("(hover: none) and (pointer: coarse)").matches || innerWidth < 760;
-
   document.addEventListener("DOMContentLoaded", function () {
     $("#yr") && ($("#yr").textContent = new Date().getFullYear());
     const nav = $("#nav"), burger = $("#burger"), menu = $("#mainmenu"), cue = $("#scrollcue");
-    if (MOBILE) document.body.classList.add("is-mobile");
 
     /* menu cards */
     const cards = $("#cards");
@@ -45,43 +43,52 @@
     $$("#mainmenu a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
     addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
 
-    /* ── scroll-scrubbed video ── */
-    const v = $("#bgv");
-    let dur = 0, targetT = 0, curT = 0, primedDesktop = false;
-    const playLoop = () => { if (!v) return; const p = v.play(); if (p && p.catch) p.catch(() => {}); };
-    const primeScrub = () => {               // desktop: a play→pause primes smooth seeking
-      if (primedDesktop || !v) return; primedDesktop = true;
-      const p = v.play && v.play();
-      if (p && p.then) p.then(() => v.pause()).catch(() => {});
-      else { try { v.pause(); } catch (e) {} }
-    };
-    if (v) {
-      v.addEventListener("loadedmetadata", () => { dur = v.duration || 10; });
-      if (MOBILE) {
-        /* MOBILE: just stream & loop the clip as a smooth moving background — no
-           per-frame seeking, so no lag. Progressive stream, no big upfront Blob. */
-        v.loop = true; v.setAttribute("loop", ""); v.setAttribute("autoplay", ""); v.setAttribute("playsinline", "");
-        v.addEventListener("loadeddata", playLoop, { once: true });
-        v.addEventListener("canplay", playLoop, { once: true });
-        playLoop();
-        ["pointerdown", "touchstart", "scroll"].forEach((ev) =>
-          addEventListener(ev, playLoop, { passive: true }));
-      } else {
-        /* DESKTOP: load the whole clip as a Blob → fully seekable on any host, so
-           scroll can scrub it frame-by-frame */
-        const srcEl = v.querySelector("source");
-        const url = (srcEl && srcEl.src) || v.currentSrc || "media/scrub.mp4";
-        fetch(url).then((r) => r.blob()).then((b) => {
-          v.removeAttribute("src"); if (srcEl) srcEl.remove();
-          v.src = URL.createObjectURL(b); v.load();
-        }).catch(() => {});
-        if (v.readyState >= 1) dur = v.duration || 10;
-        ["pointerdown", "wheel", "keydown"].forEach((ev) =>
-          addEventListener(ev, primeScrub, { once: true, passive: true }));
-        setTimeout(primeScrub, 600);
-      }
+    /* ── image-sequence canvas ── */
+    const cv = $("#seq"), ctx = cv && cv.getContext("2d", { alpha: false });
+    const frames = new Array(N);
+    let vw = 0, vh = 0, dpr = 1, ready = false, target = 0, cur = 0, drawnIdx = -1;
+
+    function fit() {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      vw = innerWidth; vh = innerHeight;
+      cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawnIdx = -1;                              // force redraw at new size
+    }
+    function draw(i) {
+      i = clamp(Math.round(i), 0, N - 1);
+      const im = frames[i];
+      if (!im || !im.complete || !im.naturalWidth) return;
+      const iw = im.naturalWidth, ih = im.naturalHeight;
+      const s = Math.max(vw / iw, vh / ih);       // cover
+      const w = iw * s, h = ih * s, x = (vw - w) / 2, y = (vh - h) / 2;
+      ctx.drawImage(im, x, y, w, h);
+      drawnIdx = i;
     }
 
+    /* preload every frame, driving the real loading bar */
+    const plFill = $("#plFill"), plNum = $("#plNum"), plMsg = $("#plMsg");
+    const MSG = ["Warming up", "Grinding fresh", "Loading the pour", "Catching the splash", "Serving up"];
+    let loaded = 0;
+    const onOne = () => {
+      loaded++;
+      const pct = Math.round((loaded / N) * 100);
+      if (plFill) plFill.style.width = pct + "%";
+      if (plNum) plNum.textContent = pct;
+      if (plMsg) plMsg.textContent = MSG[Math.min(MSG.length - 1, Math.floor(pct / 20))];
+      if (loaded >= N && !ready) {
+        ready = true; if (cv) { fit(); draw(0); }
+        setTimeout(() => { const pl = $("#preload"); if (pl) pl.classList.add("gone"); }, 350);
+      }
+    };
+    if (cv) {
+      for (let i = 0; i < N; i++) { const im = new Image(); im.decoding = "async";
+        im.onload = onOne; im.onerror = onOne; im.src = PATH(i); frames[i] = im; }
+      addEventListener("resize", () => { if (ready) { fit(); draw(cur); } });
+    } else { onOne_all(); }
+    function onOne_all(){ const pl=$("#preload"); if(pl) pl.classList.add("gone"); }
+
+    /* scroll → target frame + chrome */
     let lastY = 0;
     const onScroll = (y) => {
       nav.classList.toggle("hide", y > lastY && y > 400 && !menu.classList.contains("open"));
@@ -90,20 +97,18 @@
       const max = document.body.scrollHeight - innerHeight;
       const p = max > 0 ? clamp(y / max, 0, 1) : 0;
       $("#progress").style.transform = `scaleX(${p})`;
-      targetT = p * (dur || 10);
+      target = p * (N - 1);
     };
 
-    /* smoothing loop → eases the video toward the scroll target (desktop scrub only;
-       on mobile the video plays/loops on its own, so no per-frame seeking = no lag) */
-    if (!MOBILE) {
-      (function raf() {
-        if (v && dur) {
-          curT = lerp(curT, targetT, 0.14);
-          if (Math.abs(curT - targetT) > 0.002) { try { v.currentTime = curT; } catch (e) {} }
-        }
-        requestAnimationFrame(raf);
-      })();
-    }
+    /* eased scrub loop (draw only when the frame actually changes → efficient) */
+    (function raf() {
+      if (ready) {
+        cur = STILL ? target : lerp(cur, target, 0.2);
+        if (Math.abs(cur - target) < 0.01) cur = target;
+        if (Math.round(cur) !== drawnIdx) draw(cur);
+      }
+      requestAnimationFrame(raf);
+    })();
 
     /* smooth scroll */
     let lenis = null;
@@ -136,16 +141,7 @@
     } else { $$(".rev").forEach((el) => el.classList.add("in")); }
 
     onScroll(scrollY);
-  });
-
-  /* preloader */
-  const MSG = ["Warming up", "Grinding fresh", "Loading the pour", "Catching the splash", "Serving up"];
-  document.addEventListener("DOMContentLoaded", function () {
-    const fill = $("#plFill"), num = $("#plNum"), msg = $("#plMsg"); let p = 0, i = 0;
-    (function tick(){ p = Math.min(100, p + Math.random()*16 + 7);
-      if (fill) fill.style.width = p + "%"; if (num) num.textContent = Math.round(p);
-      if (msg && p > (i+1)*20 && i < MSG.length-1) msg.textContent = MSG[++i];
-      if (p < 100) setTimeout(tick, 130 + Math.random()*120);
-      else setTimeout(() => { const pl = $("#preload"); if (pl) pl.classList.add("gone"); }, 400); })();
+    /* safety: if frames are slow, don't trap the user on the preloader */
+    setTimeout(() => { const pl = $("#preload"); if (pl && !ready) pl.classList.add("gone"); }, 9000);
   });
 })();
